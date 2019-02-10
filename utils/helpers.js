@@ -63,7 +63,7 @@ export function getMetricMetaInfo (metric) {
       displayName: 'Sleep',
       max: 24,
       unit: 'hours',
-      step: 1,
+      step: .5,
       type: 'slider',
       getIcon() {
         return (
@@ -144,11 +144,21 @@ export function timeToString (time = Date.now()) {
   return todayUTC.toISOString().split('T')[0]
 }
 
+export function getDailyReminderValue() {
+  return {
+    today: "Don't forget to log your entry today."
+  }
+}
+
 const styles = StyleSheet.create({
   iconContainer: {
     width: 50,
     height: 50,
     padding: 8,
     borderRadius: 50,
-  }
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 20,
+  },
+
 });

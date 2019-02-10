@@ -1,9 +1,9 @@
 import React from 'react';
 import { Text } from 'react-native';
 
-export default function DateHeader({ date }) {
+export default function DateHeader({ date, style }) {
   return (
-    <Text>
+    <Text style={style}>
       {date}
     </Text>
   );

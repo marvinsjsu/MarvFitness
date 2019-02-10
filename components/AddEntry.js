@@ -1,14 +1,17 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { connect } from 'react-redux';
 
-import { getMetricMetaInfo, timeToString } from '../utils/helpers';
+import { getMetricMetaInfo, timeToString, getDailyReminderValue } from '../utils/helpers';
 import MarvSlider from './MarvSlider';
 import MarvStepper from './MarvStepper';
 import DateHeader from './DateHeader';
 import TextButton from './TextButton';
+import { submitEntry, removeEntry } from '../utils/api';
+import { addEntry } from '../actions';
 
-export default class AddEntry extends Component {
+class AddEntry extends Component {
 
   state = {
     run: 0,
@@ -49,8 +52,14 @@ export default class AddEntry extends Component {
   };
 
   submit = () => {
+    const { dispatch} = this.props;
     const key = timeToString();
     const entry = this.state;
+
+    // update redux
+    dispatch(addEntry({
+      [key]: entry
+    }));
 
     this.setState(() => ({
       run: 0,
@@ -60,24 +69,29 @@ export default class AddEntry extends Component {
       eat: 0,
     }));
 
-    // update redux
 
     // navigate to home
 
     // save to database
+    submitEntry(key, entry);
 
     // clear local notification
-  }
+  };
 
   reset = () => {
+    const { dispatch } = this.props;
     const key = timeToString();
 
     // update redux
-
+    dispatch(addEntry({
+      [key]: getDailyReminderValue()
+    }));
     // navigate to home
 
     // update db
-  }
+
+    removeEntry(key);
+  };
 
   render() {
     const metaInfo = getMetricMetaInfo();
@@ -99,15 +113,15 @@ export default class AddEntry extends Component {
     }
 
     return (
-      <View>
-        <DateHeader date={(new Date()).toLocaleDateString()} />
+      <View style={styles.container}>
+        <DateHeader style={styles.date} date={(new Date()).toLocaleDateString()} />
         {
           Object.keys(metaInfo).map((key) => {
             const { getIcon, type, ...rest } = metaInfo[key];
             const value = this.state[key];
 
             return (
-              <View key={key}>
+              <View style={styles.rowContainer} key={key}>
                 {getIcon()}
                 {type === 'slider'
                   ? <MarvSlider
@@ -122,11 +136,11 @@ export default class AddEntry extends Component {
                       {...rest}
                     />
                 }
-                <SubmitBtn />
               </View>
             );
           })
         }
+        <SubmitBtn style={styles.btn} onPress={this.submit} />
       </View>
     );
   }
@@ -136,19 +150,27 @@ function SubmitBtn ({ onPress }) {
   return (
     <TouchableOpacity
       style={styles.btn}
-      onPress={this.submit}
+      onPress={onPress}
     >
       <Text style={styles.btnText}>Submit</Text>
     </TouchableOpacity>
   );
 };
 
+function mapStateToProps(state) {
+  const key = timeToString();
+
+  return {
+    alreadyLogged: state[key] && typeof state[key].today === 'undefined'
+  }
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginLeft: 10,
-    marginRight: 10,
-    alignItems: 'center',
+    margin: 20,
+    borderRadius: 20,
+    alignItems: 'flex-start',
     justifyContent: 'center',
   },
   btn: {
@@ -158,9 +180,20 @@ const styles = StyleSheet.create({
     paddingRight: 50,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
     borderRadius: 5,
   },
   btnText: {
     color: '#FFF',
+  },
+  date: {
+    alignSelf: 'flex-end',
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
   }
 });
+
+export default connect(mapStateToProps)(AddEntry);
